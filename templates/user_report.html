@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Report</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 70%;
+        margin: 20px auto; /* Center the table */
+      }
+
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      .info-box {
+        border: 1px solid #ccc; /* Add a border to create a box */
+        padding: 10px; /* Add padding to the box */
+        margin-bottom: 20px; /* Add margin at the bottom of the box */
+        display: inline-block; /* Display boxes horizontally */
+      }
+
+      .info-label {
+        font-weight: bold;
+        margin-right: 5px; /* Add right margin to the label */
+      }
+
+      .form-container {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        padding: 8px;
+        margin-right: 10px;
+      }
+
+      input[type="submit"] {
+        padding: 8px 16px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-container">
+      <form action="/user_report" method="get">
+        <label for="mon_year">Enter Month-Year:</label>
+        <input
+          type="text"
+          id="mon_year"
+          name="mon_year"
+          placeholder="MMM-YY"
+          required
+        />
+        <label for="gid">Enter Group ID:</label>
+        <input
+          type="text"
+          id="gid"
+          name="gid"
+          placeholder="Group ID"
+          required
+        />
+        <label for="pid">Enter Player ID:</label>
+        <input
+          type="text"
+          id="pid"
+          name="pid"
+          placeholder="Player ID"
+          required
+        />
+        <input type="submit" value="Submit" />
+      </form>
+    </div>
+
+    <h1>User Report</h1>
+    <div class="info-box">
+      <span class="info-label">Month-Year:</span>{{ mon_year }}
+    </div>
+
+    <div class="info-box"><span class="info-label">GID:</span>{{ gid }}</div>
+
+    <div class="info-box"><span class="info-label">PID:</span>{{ pid }}</div>
+
+    <h2>Records for Month</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Achieved</th>
+          <th>Target</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for record in records_for_month %}
+        <tr>
+          <td>{{ record['date'] }}</td>
+          <td>{{ record['achieved'] }}</td>
+          <td>{{ record['target'] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>TC Report</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Previous TC</th>
+          <th>Updated TC</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in table_data %} {% if entry['date'] and entry['prev_tc']
+        and entry['updated_tc'] %}
+        <tr>
+          <td>{{ entry['date'] }}</td>
+          <td>{{ entry['prev_tc'] }}</td>
+          <td>{{ entry['updated_tc'] }}</td>
+        </tr>
+        {% endif %} {% endfor %}
+      </tbody>
+    </table>
+
+    <h2>Collection Report</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Previous Collection</th>
+          <th>Updated Collection</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in table_data2 %}
+        <tr>
+          <td>{{ entry['date'] }}</td>
+          <td>{{ entry['prev_collection'] }}</td>
+          <td>{{ entry['updated_collection'] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </body>
+</html>
