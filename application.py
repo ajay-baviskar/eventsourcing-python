@@ -13,6 +13,7 @@ from typing import List, cast, Set
 import requests
 import aiohttp
 
+# #SERVER DB 
 os.environ['PERSISTENCE_MODULE'] = 'eventsourcing.postgres'
 os.environ['POSTGRES_DBNAME'] = 'gamification_audit'
 os.environ['POSTGRES_HOST'] = '185.193.17.133'
@@ -20,10 +21,19 @@ os.environ['POSTGRES_PORT'] = '36969'
 os.environ['POSTGRES_USER'] = 'postgres'
 os.environ['POSTGRES_PASSWORD'] = '0ct@1901'
 
+#LOCAL DB
+# os.environ['PERSISTENCE_MODULE'] = 'eventsourcing.postgres'
+# os.environ['POSTGRES_DBNAME'] = 'new_game_one'
+# os.environ['POSTGRES_HOST'] = 'localhost'
+# os.environ['POSTGRES_PORT'] = '5432'
+# os.environ['POSTGRES_USER'] = 'postgres'
+# os.environ['POSTGRES_PASSWORD'] = 'root'
 
+#LOCAL POSTGRES DB
 # os.environ['PERSISTENCE_MODULE'] = 'eventsourcing_sqlalchemy'
 # os.environ['SQLALCHEMY_URL'] = 'postgresql://postgres:0ct@1901@185.193.17.133:36969/gamification_audit'
 
+#LOCAL SQLITE DB
 # os.environ["PERSISTENCE_MODULE"] = 'eventsourcing.sqlite'
 # os.environ["SQLITE_DBNAME"] = 'player66.db'
 

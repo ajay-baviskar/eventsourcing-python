@@ -16,7 +16,7 @@ import os
 import logging
 
 # Set up logging configuration
-logging.basicConfig(filename='app.log', level=logging.DEBUG,
+logging.basicConfig(filename='logs.log', level=logging.DEBUG,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Initialize Flask app
