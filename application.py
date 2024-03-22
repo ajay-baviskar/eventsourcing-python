@@ -13,19 +13,19 @@ from typing import List, cast, Set
 import requests
 import aiohttp
 
-# os.environ['PERSISTENCE_MODULE'] = 'eventsourcing.postgres'
-# os.environ['POSTGRES_DBNAME'] = 'onefplayer'
-# os.environ['POSTGRES_HOST'] = 'localhost'
-# os.environ['POSTGRES_PORT'] = '5432'
-# os.environ['POSTGRES_USER'] = 'postgres'
-# os.environ['POSTGRES_PASSWORD'] = 'root'
+os.environ['PERSISTENCE_MODULE'] = 'eventsourcing.postgres'
+os.environ['POSTGRES_DBNAME'] = 'gamification_audit'
+os.environ['POSTGRES_HOST'] = '185.193.17.133'
+os.environ['POSTGRES_PORT'] = '36969'
+os.environ['POSTGRES_USER'] = 'postgres'
+os.environ['POSTGRES_PASSWORD'] = 'root'
 
 
 # os.environ['PERSISTENCE_MODULE'] = 'eventsourcing_sqlalchemy'
-# os.environ['SQLALCHEMY_URL'] = 'postgresql://postgres:root@localhost:5432/player_one'
+# os.environ['SQLALCHEMY_URL'] = 'postgresql://postgres:0ct@1901@185.193.17.133:36969/gamification_audit'
 
-os.environ["PERSISTENCE_MODULE"] = 'eventsourcing.sqlite'
-os.environ["SQLITE_DBNAME"] = 'player66.db'
+# os.environ["PERSISTENCE_MODULE"] = 'eventsourcing.sqlite'
+# os.environ["SQLITE_DBNAME"] = 'player66.db'
 
 # Custom JSON Encoder for handling Decimal objects
 class DecimalEncoder(json.JSONEncoder):
