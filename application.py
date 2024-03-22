@@ -18,7 +18,7 @@ os.environ['POSTGRES_DBNAME'] = 'gamification_audit'
 os.environ['POSTGRES_HOST'] = '185.193.17.133'
 os.environ['POSTGRES_PORT'] = '36969'
 os.environ['POSTGRES_USER'] = 'postgres'
-os.environ['POSTGRES_PASSWORD'] = 'root'
+os.environ['POSTGRES_PASSWORD'] = '0ct@1901'
 
 
 # os.environ['PERSISTENCE_MODULE'] = 'eventsourcing_sqlalchemy'
