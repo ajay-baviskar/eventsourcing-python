@@ -40,20 +40,6 @@ pipelines:
             - docker tag "${IMAGE_NAME}" "${IMAGE}:latest"
             - docker push "${IMAGE}:${VERSION}"
             - docker push "${IMAGE}:latest"
-          after-script:
-            - ALERT_TYPE="success"
-            - if [[ $BITBUCKET_EXIT_CODE -ne 0 ]]; then ALERT_TYPE="error" ; fi
-            - pipe: atlassian/email-notify:0.8.0
-              variables:
-                USERNAME: 'appadmin@orangecurrent.com'
-                PASSWORD: $MAIL_PASSWORD
-                FROM: 'appadmin@orangecurrent.com'
-                TO: 'appadmin@orangecurrent.com'
-                HOST: 'box5826.bluehost.com'
-                SUBJECT: '${ALERT_TYPE}:Bitbucket pipeline Notification for ${BITBUCKET_REPO_FULL_NAME}:${BITBUCKET_BRANCH}'
-                BODY_PLAIN: 'Please Test Sucess build ${BITBUCKET_REPO_FULL_NAME}:${BITBUCKET_BRANCH}'
-                DEBUG: "true"
-                PORT: "587"
 definitions:
   services:
     docker:
