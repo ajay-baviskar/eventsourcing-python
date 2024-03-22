@@ -22,8 +22,6 @@ pipelines:
             - docker
           image:
             name: python
-          caches:
-            - python
           size: 2x
           artifacts:
             - "*.tar"
