@@ -12,26 +12,20 @@ import asyncio
 from typing import List, cast, Set
 import requests
 import aiohttp
+from dotenv import load_dotenv, dotenv_values
 
-# #SERVER DB 
-os.environ['PERSISTENCE_MODULE'] = 'eventsourcing.postgres'
-os.environ['POSTGRES_DBNAME'] = 'gamification_audit'
-os.environ['POSTGRES_HOST'] = '185.193.17.133'
-os.environ['POSTGRES_PORT'] = '36969'
-os.environ['POSTGRES_USER'] = 'postgres'
-os.environ['POSTGRES_PASSWORD'] = '0ct@1901'
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
+
+# Connect the path with your '.env' file name
+load_dotenv(os.path.join(BASEDIR, 'variables.env'))
 
 #LOCAL DB
-# os.environ['PERSISTENCE_MODULE'] = 'eventsourcing.postgres'
-# os.environ['POSTGRES_DBNAME'] = 'new_game_one'
-# os.environ['POSTGRES_HOST'] = 'localhost'
-# os.environ['POSTGRES_PORT'] = '5432'
-# os.environ['POSTGRES_USER'] = 'postgres'
-# os.environ['POSTGRES_PASSWORD'] = 'root'
-
-#LOCAL POSTGRES DB
-# os.environ['PERSISTENCE_MODULE'] = 'eventsourcing_sqlalchemy'
-# os.environ['SQLALCHEMY_URL'] = 'postgresql://postgres:0ct@1901@185.193.17.133:36969/gamification_audit'
+persistence_module = os.getenv('PERSISTENCE_MODULE')
+postgres_dbname = os.getenv("POSTGRES_DBNAME")
+postgres_host = os.getenv('POSTGRES_HOST')
+postgres_port = os.getenv('POSTGRES_PORT')
+postgres_user = os.getenv('POSTGRES_USER')
+postgres_password = os.getenv('POSTGRES_PASSWORD')
 
 #LOCAL SQLITE DB
 # os.environ["PERSISTENCE_MODULE"] = 'eventsourcing.sqlite'
@@ -110,11 +104,6 @@ class Gamification(Application):
             group_user_registry = self.repository.get(registry_id)
         except AggregateNotFound:
             self.save(group_user_registry)
-        
-        
-    
-        
-    
         
     # Method to add the achieved collection in the db. Takes month-year as input.
     def add_collection(self, gid, pid, dt, collection: Decimal,tc) -> None:

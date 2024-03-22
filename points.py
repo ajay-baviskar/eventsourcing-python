@@ -6,6 +6,12 @@ from model import MonthlyAccount
 from uuid import uuid5, NAMESPACE_URL
 from application import Gamification
 import os
+from dotenv import load_dotenv, dotenv_values
+
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
+
+# Connect the path with your '.env' file name
+load_dotenv(os.path.join(BASEDIR, 'variables.env'))
 
 # Initialize Gamification application
 game = Gamification()
@@ -52,13 +58,13 @@ class Counters(ProcessApplication):
         
         #@Author : Suhani
         # Points calculation logic
-        A = 160
+        A = int(os.getenv('A'))
         target = round(tc,2)
         if target == 0:
             x = 0
         else:
             x = round((float(amount)/target),10)
-        actual_points = round(((A**x - 1) / (A - 1)) * (3000 * (target / 1000000)),9)
+        actual_points = round(((A**x - 1) / (A - 1)) * (int(os.getenv('MAX_PERFORMANCE')) * (target / int(os.getenv('BENCHMARK')))),9)
 
         # Determine bonus points based on the day of the month
         day = int(dt.split('-')[2])
@@ -117,7 +123,7 @@ class Counters(ProcessApplication):
             collection = Collection(gid, pid, mon_year)
 
         #@Author : Suhani
-        A = 160
+        A = int(os.getenv('A'))
         target = tc
         
         points = 0
@@ -133,7 +139,7 @@ class Counters(ProcessApplication):
                 x = 0
             else:
                 x += round((float(collection_dict[i]) / target), 10)
-            actual_points = round((((A ** x) - 1) / (A - 1)) * (3000 * (target / 1000000)),9)
+            actual_points = round(((A**x - 1) / (A - 1)) * (int(os.getenv('MAX_PERFORMANCE')) * (target / int(os.getenv('BENCHMARK')))),9)
             # Determine bonus points based on the day of the month
             day = int(i.split('-')[2])
 

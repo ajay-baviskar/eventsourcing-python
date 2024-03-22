@@ -12,8 +12,13 @@ from datetime import datetime, timedelta
 import aiohttp
 import asyncio
 import os
-
 import logging
+from dotenv import load_dotenv, dotenv_values
+
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
+
+# Connect the path with your '.env' file name
+load_dotenv(os.path.join(BASEDIR, 'variables.env'))
 
 # Set up logging configuration
 logging.basicConfig(filename='logs.log', level=logging.DEBUG,
@@ -77,7 +82,7 @@ def add_collection():
 # Takes the group id and player id from the GroupUserRegistry
 def get_records_for_month(gid, pid, mon_year):
     try:
-        api_url = "https://topupp.i-disco.in/report-service/api/v1/group/user/kpi/new"
+        api_url = os.getenv('API_URL')
         
         # Create a list to store records for the entire month
         all_records = []
@@ -348,5 +353,5 @@ def get_collection_report():
 
 if __name__ == '__main__':
 
-    app.run(host='0.0.0.0', port='3000',debug=True)
+    app.run(host=os.getenv('FLASK_RUN_HOST'), port=os.getenv('FLASK_RUN_PORT'),debug=True)
     runner.stop()
