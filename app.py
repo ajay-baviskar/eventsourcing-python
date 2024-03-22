@@ -11,6 +11,7 @@ from eventsourcing.system import System
 from datetime import datetime, timedelta
 import aiohttp
 import asyncio
+import os
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -26,7 +27,7 @@ counters = runner.get(Counters)
 
 # Route to fetch the group ids, user ids and district ids from the external apis and store them in DB.
 # Register these players in the PlayerRegistry as well, simulataneously 
-@app.route('/fetch',methods=['GET']) #3245 records 
+@app.route('/fetch',methods=['GET']) #3245 records #3251
 def fetch():
     game.add_groups_and_users() # To fetch gid, pid, distid from API and save in DB
     return jsonify({'message':'Data Fetched!!!'})
@@ -42,14 +43,14 @@ def add_collection():
     all_ids = game.get_all_player_ids(name="players")
     for i in all_ids:
         gid, pid = game.get_pid_gid(i)
-    print(gid,pid)
-    records_for_month = get_records_for_month(int(gid), [int(pid)], mon_year)
-    # Iterate over the records and add them to the database
-    for record in records_for_month:
-        dt = record['date']
-        collection = record['achieved']
-        tc = record['target']
-        game.add_collection(gid, pid, dt, collection, tc)
+        print(gid,pid)
+        records_for_month = get_records_for_month(int(gid), [int(pid)], mon_year)
+        # Iterate over the records and add them to the database
+        for record in records_for_month:
+            dt = record['date']
+            collection = record['achieved']
+            tc = record['target']
+            game.add_collection(gid, pid, dt, collection, tc)
     return jsonify({'message': 'Collections for users added successfully!'})
 
 # Get the achieved collection and target collection for a whole month using external api 
@@ -94,7 +95,7 @@ def get_records_for_month(gid, pid, mon_year):
                     # Append relevant information to the list
                     all_records.append({
                         'date': dt,
-                        'achieved': 20008,
+                        'achieved': collection_record['achieved'],
                         'target': collection_record['target']
                     })
     return all_records
@@ -138,7 +139,7 @@ def get_district_rank():
         district_id = request.form.get('district_id')
 
         rank_list = []
-        group_user_registry = game.repository.get(GroupUserRegistry.create_id2())
+        group_user_registry = game.repository.get(GroupUserRegistry.create_id())
         group_data = group_user_registry.data[0]
 
         for gid, player_dict in group_data.items():

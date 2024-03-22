@@ -50,8 +50,8 @@ class GroupUserRegistry(Aggregate):
         async with session.get(url) as response:
             data = await response.json()
             for member in data.get('data', []):
-                roles = member.get('roles', [])
-                if "MARKETERS" in roles:
+                designation = member.get('designation')
+                if designation == "MARKETERS":
                     user_id = member['user_id']
                     district_id = member['district_id']
                     existing_mapping = dataa.get(gid, {})  # Existing mapping for the group ID if it exists
@@ -60,6 +60,7 @@ class GroupUserRegistry(Aggregate):
                         existing_mapping[user_id] = district_id
                     dataa[gid] = existing_mapping
             print("done", gid)
+
 
             
     @classmethod
@@ -216,7 +217,6 @@ class MonthlyAccount(Aggregate):
     def add_collection(self, gid, pid, mon_year, dt, tc, collection: Decimal) -> None:
         if not hasattr(self, 'dict3'):
             self.dict3 = {}
-        print(type(self.dict3))
         if not hasattr(self, 'dict'):
             self.dict = {}
         self.dict[dt] = collection # Adds an entry to the dictionary self.dict with the key dt and value collection
@@ -224,7 +224,6 @@ class MonthlyAccount(Aggregate):
         if dt not in self.dict3.keys():
             self.dict3[dt] = []  # Initialize list for each date if not present
         self.dict3[dt].append(collection)  
-        print(self.dict3)  
         self.balance += collection # Holds the cumilative monthly collection 
         if (self.tc != tc): # If tc is changed, tirgger the CollectionUpdated 
             self.tc=tc

@@ -13,11 +13,19 @@ from typing import List, cast, Set
 import requests
 import aiohttp
 
+# os.environ['PERSISTENCE_MODULE'] = 'eventsourcing.postgres'
+# os.environ['POSTGRES_DBNAME'] = 'onefplayer'
+# os.environ['POSTGRES_HOST'] = 'localhost'
+# os.environ['POSTGRES_PORT'] = '5432'
+# os.environ['POSTGRES_USER'] = 'postgres'
+# os.environ['POSTGRES_PASSWORD'] = 'root'
+
+
 # os.environ['PERSISTENCE_MODULE'] = 'eventsourcing_sqlalchemy'
-# os.environ['SQLALCHEMY_URL'] = 'postgresql://postgres:root@localhost:5432/new_player'
+# os.environ['SQLALCHEMY_URL'] = 'postgresql://postgres:root@localhost:5432/player_one'
 
 os.environ["PERSISTENCE_MODULE"] = 'eventsourcing.sqlite'
-os.environ["SQLITE_DBNAME"] = 'player55.db'
+os.environ["SQLITE_DBNAME"] = 'player66.db'
 
 # Custom JSON Encoder for handling Decimal objects
 class DecimalEncoder(json.JSONEncoder):
@@ -87,8 +95,16 @@ class Gamification(Application):
             for pid,dist_id in group_user_registry1[gid].items():
                 group_user_registry.add_grp_user(gid=gid, pid=pid, dist_id=dist_id)  
                 self.register_player2(gid, pid)
-        # Save the initial state of GroupUserRegistry in DB
-        self.save(group_user_registry)
+        registry_id= GroupUserRegistry.create_id()
+        try:
+            group_user_registry = self.repository.get(registry_id)
+        except AggregateNotFound:
+            self.save(group_user_registry)
+        
+        
+    
+        
+    
         
     # Method to add the achieved collection in the db. Takes month-year as input.
     def add_collection(self, gid, pid, dt, collection: Decimal,tc) -> None:

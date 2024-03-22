@@ -5,6 +5,7 @@ from eventsourcing.domain import Aggregate, event
 from model import MonthlyAccount
 from uuid import uuid5, NAMESPACE_URL
 from application import Gamification
+import os
 
 # Initialize Gamification application
 game = Gamification()
