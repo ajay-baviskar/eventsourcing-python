@@ -1,0 +1,60 @@
+# Template docker-push
+
+# This template allows you to build and push your docker image to a Docker Hub account.
+# The workflow allows running tests, code linting and security scans on feature branches (as well as master).
+# The docker image will be validated and pushed to the docker registry after the code is merged to master.
+
+# Prerequisites: $DOCKERHUB_USERNAME, $DOCKERHUB_PASSWORD setup as deployment variables
+
+options:
+  docker: true
+  size: 2x
+pipelines:
+  branches:
+    testing:
+      - step:
+          name: Build and Test
+          script:
+            - IMAGE_NAME=topupp-gamification_v2_${BITBUCKET_BRANCH}
+            - docker build . --file Dockerfile --tag ${IMAGE_NAME}
+            - docker save ${IMAGE_NAME} --output "${IMAGE_NAME}.tar"
+          services:
+            - docker
+          image:
+            name: python
+          caches:
+            - python
+          size: 2x
+          artifacts:
+            - "*.tar"
+      - step:
+          name: Push Image to Docker
+          deployment: Production
+          script:
+            - echo ${DOCKERHUB_PASSWORD} | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+            - IMAGE_NAME=topupp-gamification_v2_${BITBUCKET_BRANCH}
+            - docker load --input "${IMAGE_NAME}.tar"
+            - VERSION="v0.1.${BITBUCKET_BUILD_NUMBER}"
+            - IMAGE=${DOCKERHUB_USERNAME}/${IMAGE_NAME}
+            - docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
+            - docker tag "${IMAGE_NAME}" "${IMAGE}:latest"
+            - docker push "${IMAGE}:${VERSION}"
+            - docker push "${IMAGE}:latest"
+          after-script:
+            - ALERT_TYPE="success"
+            - if [[ $BITBUCKET_EXIT_CODE -ne 0 ]]; then ALERT_TYPE="error" ; fi
+            - pipe: atlassian/email-notify:0.8.0
+              variables:
+                USERNAME: 'appadmin@orangecurrent.com'
+                PASSWORD: $MAIL_PASSWORD
+                FROM: 'appadmin@orangecurrent.com'
+                TO: 'appadmin@orangecurrent.com'
+                HOST: 'box5826.bluehost.com'
+                SUBJECT: '${ALERT_TYPE}:Bitbucket pipeline Notification for ${BITBUCKET_REPO_FULL_NAME}:${BITBUCKET_BRANCH}'
+                BODY_PLAIN: 'Please Test Sucess build ${BITBUCKET_REPO_FULL_NAME}:${BITBUCKET_BRANCH}'
+                DEBUG: "true"
+                PORT: "587"
+definitions:
+  services:
+    docker:
+      memory: 4096
