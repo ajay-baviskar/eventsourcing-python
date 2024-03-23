@@ -41,6 +41,7 @@ class GroupUserRegistry(Aggregate):
     def fetch_all_groups(cls) -> List[str]:
         # Fetch all group IDs from the first API
         url = os.getenv('FETCH_GROUPS_URL')
+        print("fetch_groups", url)
         response = requests.get(url)
         data = response.json().get('data', [])
         new_data = data['data']
@@ -53,8 +54,9 @@ class GroupUserRegistry(Aggregate):
     #dataa -> dict ({gid : {pid:distid, pid:distid}, gid : {pid:distid, pid:distid}})
     @classmethod
     async def fetch_group_users(cls, session, gid: str, dataa: dict) -> None:
-        FETCH_GROUPS_URL = os.getenv('FETCH_GROUPS_URL')
-        url = f"{FETCH_GROUPS_URL}/{gid}"
+        FETCH_USERS_URL = os.getenv('FETCH_USERS_URL')
+        print("fetchusersurl", FETCH_USERS_URL)
+        url = f"{FETCH_USERS_URL}/{gid}"
         async with session.get(url) as response:
             data = await response.json()
             for member in data.get('data', []):

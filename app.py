@@ -83,6 +83,7 @@ def add_collection():
 def get_records_for_month(gid, pid, mon_year):
     try:
         api_url = os.getenv('API_URL')
+        print("get_records_url",api_url)
         
         # Create a list to store records for the entire month
         all_records = []
@@ -352,6 +353,9 @@ def get_collection_report():
         return render_template('error.html', error_message=str(e))
 
 if __name__ == '__main__':
-
-    app.run(host=os.getenv('FLASK_RUN_HOST'), port=os.getenv('FLASK_RUN_PORT'),debug=True)
+    host=os.getenv('FLASK_RUN_HOST')
+    port=os.getenv('FLASK_RUN_PORT')
+    app.run(host,port,debug=True)
+    print("HOST",host)
+    print("PORT",port)
     runner.stop()

@@ -27,6 +27,15 @@ postgres_port = os.getenv('POSTGRES_PORT')
 postgres_user = os.getenv('POSTGRES_USER')
 postgres_password = os.getenv('POSTGRES_PASSWORD')
 
+print(persistence_module)
+print(postgres_dbname)
+print(postgres_host)
+print(postgres_port)
+print(postgres_user)
+print(postgres_password)
+    
+
+
 #LOCAL SQLITE DB
 # os.environ["PERSISTENCE_MODULE"] = 'eventsourcing.sqlite'
 # os.environ["SQLITE_DBNAME"] = 'player66.db'
