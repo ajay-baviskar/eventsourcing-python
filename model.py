@@ -9,9 +9,12 @@ import aiohttp
 import json
 from pathlib import Path
 import os 
-from dotenv import load_dotenv
-load_dotenv()
+from dotenv import load_dotenv, dotenv_values
 
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
+
+# Connect the path with your '.env' file name
+load_dotenv(os.path.join(BASEDIR, 'variables.env'))
 
 #@Author : Suhani
 class GroupUserRegistry(Aggregate):  
