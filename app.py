@@ -1,6 +1,6 @@
 #@Author : Suhani
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, Response
 from model import GroupUserRegistry
 from application import Gamification
 from points import Counters
@@ -160,6 +160,52 @@ def get_rank():
         logging.error(f'Error in get_rank function: {str(e)}')
         # Handle the error gracefully, e.g., return an error page or message
         return render_template('error.html', error_message=str(e))
+
+
+@app.route('/rank/download', methods=['GET'])
+def download_rank_csv():
+    try:
+        dt = request.args.get('mon_year')
+        rank_list = []
+
+        # Iterate over the PlayerRegistry for gid and pid 
+        all_ids = game.get_all_player_ids(name="players")
+        for i in all_ids:
+            gid, pid = game.get_pid_gid(i)
+            points = counters.get_collection_points(gid=gid, pid=pid, mon_year=dt)
+
+            rank_dict = {
+                'GID': gid,
+                'PID': pid,
+                'Points': points
+            }
+            rank_list.append(rank_dict)
+
+        # Sort the list of dictionaries by the 'Points' key in descending order
+        sorted_rank = sorted(rank_list, key=lambda x: x['Points'], reverse=True)
+
+        # Prepare CSV data
+        csv_data = "GID,PID,Points\n"  # Header
+        for idx, player_info in enumerate(sorted_rank, start=1):
+            csv_data += f"{player_info['GID']},{player_info['PID']},{player_info['Points']}\n"
+
+        # Set up response headers
+        headers = {
+            "Content-Disposition": f"attachment; filename=rank_{dt}.csv",
+            "Content-Type": "text/csv"
+        }
+
+        # Return CSV file as a response
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers=headers
+        )
+    except Exception as e:
+        logging.error(f'Error in download_rank_csv function: {str(e)}')
+        # Handle the error gracefully, e.g., return an error page or message
+        return render_template('error.html', error_message=str(e))
+
 
 
 # Takes mon-year and district id as user input
