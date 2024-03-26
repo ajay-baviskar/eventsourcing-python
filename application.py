@@ -38,7 +38,7 @@ print(postgres_password)
 
 #LOCAL SQLITE DB
 # os.environ["PERSISTENCE_MODULE"] = 'eventsourcing.sqlite'
-# os.environ["SQLITE_DBNAME"] = 'player66.db'
+# os.environ["SQLITE_DBNAME"] = 'player68.db'
 
 # Custom JSON Encoder for handling Decimal objects
 class DecimalEncoder(json.JSONEncoder):
@@ -106,7 +106,7 @@ class Gamification(Application):
         group_user_registry1 = group_user_registry_data[0]
         for gid in group_user_registry1.keys():
             for pid,dist_id in group_user_registry1[gid].items():
-                group_user_registry.add_grp_user(gid=gid, pid=pid, dist_id=dist_id)  
+                group_user_registry.add_grp_user(gid= gid, pid= pid , dist_id=dist_id)  
                 self.register_player2(gid, pid)
         registry_id= GroupUserRegistry.create_id()
         try:

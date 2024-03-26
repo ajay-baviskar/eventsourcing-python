@@ -230,14 +230,18 @@ class MonthlyAccount(Aggregate):
         if not hasattr(self, 'dict'):
             self.dict = {}
         self.dict[dt] = collection # Adds an entry to the dictionary self.dict with the key dt and value collection
-
+        self.balance = sum(self.dict.values())
         if dt not in self.dict3.keys():
             self.dict3[dt] = []  # Initialize list for each date if not present
         self.dict3[dt].append(collection)  
-        self.balance += collection # Holds the cumilative monthly collection 
+        #self.balance += collection # Holds the cumilative monthly collection 
+        print(self.balance)
+        tc = round(tc,2)
         if (self.tc != tc): # If tc is changed, tirgger the CollectionUpdated 
             self.tc=tc
-            self.trigger_event(self.CollectionUpdated, gid=gid, pid=pid, mon_year=mon_year, dt=dt, collection=collection,tc=tc)
+        if self.tc < self.balance:
+            tc = self.balance
+        self.trigger_event(self.CollectionUpdated, gid=gid, pid=pid, mon_year=mon_year, dt=dt, collection=collection,tc=tc)
         # if tc is not changed, add collection as it is
         self.trigger_event(self.CollectionAdded, gid=gid, pid=pid, mon_year=mon_year, dt=dt, collection=collection,tc=tc)  
 
