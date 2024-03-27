@@ -358,6 +358,8 @@ def get_flag():
                     entry = {
                         'gid': gid,
                         'pid': pid,
+                        'balance' : balance,
+                        'var' : var
                     }
                     table_data.append(entry)
 
