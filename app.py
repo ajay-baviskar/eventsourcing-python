@@ -145,7 +145,7 @@ def get_rank():
             rank_dict = {
                 'GID': gid,
                 'PID': pid,
-                'Points': points
+                'Points': round(points,2)
             }
             rank_list.append(rank_dict)
 
@@ -162,6 +162,7 @@ def get_rank():
         return render_template('error.html', error_message=str(e))
 
 
+    
 @app.route('/rank/download', methods=['GET'])
 def download_rank_csv():
     try:
@@ -272,16 +273,17 @@ def get_user_report():
             if results != 0:
                 prev_tc = 0
                 for date, tc in results.dict2.items():
-                    entry = {
-                        'gid': gid,
-                        'pid': pid,
-                        'mon_year': mon_year,
-                        'date': date,
-                        'prev_tc': prev_tc,
-                        'updated_tc': tc
-                    }
-                    table_data.append(entry)
-                    prev_tc = tc
+                    if prev_tc is not None and prev_tc != tc:
+                        entry = {
+                            'gid': gid,
+                            'pid': pid,
+                            'mon_year': mon_year,
+                            'date': date,
+                            'prev_tc': prev_tc,
+                            'updated_tc': tc
+                        }
+                        table_data.append(entry)
+                        prev_tc = tc
 
                 # Collection Report
                 if hasattr(results, 'dict3'):
@@ -317,6 +319,55 @@ def get_user_report():
         return render_template('error.html', error_message=str(e))
 
 
+
+# @app.route('/flag', methods=['GET'])
+# def get_flag():
+#     flag = 0
+#     mon_year = request.args.get('mon_year')
+#     all_ids = game.get_all_player_ids(name="players")
+#     table_data = []
+#     for i in all_ids:
+#         gid, pid = game.get_pid_gid(i)
+#         results = game.get_data(gid, pid, mon_year)
+#         balance = sum(results.dict.values())
+#         if results != 0:
+#             var = results.dict2[list(results.dict2)[-1]]
+#             if var <= balance:
+#                 flag+=1
+#                 print("FLAG",flag)
+#         return ("OK")
+
+
+@app.route('/flag', methods=['GET'])
+def get_flag():
+    try:
+        flag = 0
+        mon_year = request.args.get('mon_year')
+        all_ids = game.get_all_player_ids(name="players")
+        table_data = []
+        for i in all_ids:
+            gid, pid = game.get_pid_gid(i)
+            print(gid,pid)
+            results = game.get_data(gid, pid, mon_year)
+            balance = sum(results.dict.values())
+            if results != 0:
+                var = results.dict2[list(results.dict2)[-1]]
+                print(var)
+                if var <= balance:
+                    flag+=1
+                    entry = {
+                        'gid': gid,
+                        'pid': pid,
+                    }
+                    table_data.append(entry)
+
+        return render_template('flag.html', table_data=table_data, mon_year=mon_year)
+    except Exception as e:
+        logging.error(f'Error in get_flag function: {str(e)}')
+        # Handle the error gracefully, e.g., return an error page or message
+        return render_template('error.html', error_message=str(e))
+
+
 # Generates the updated target colletion of all users.
 # Takes mon-year as user input
 @app.route("/tc_report", methods=['GET'])
@@ -334,15 +385,16 @@ def get_report():
                 prev_j = 0
                 if hasattr(results, 'dict2'):
                     for date, j in results.dict2.items():
-                        entry = {
-                            'gid': gid,
-                            'pid': pid,
-                            'date': date,
-                            'prev_tc': prev_j,
-                            'updated_tc': j
-                        }
-                        table_data.append(entry)
-                        prev_j = j
+                        if prev_j is not None and prev_j != j:
+                            entry = {
+                                'gid': gid,
+                                'pid': pid,
+                                'date': date,
+                                'prev_tc': prev_j,
+                                'updated_tc': j
+                            }
+                            table_data.append(entry)
+                            prev_j = j
 
         return render_template('tc_report.html', table_data=table_data, mon_year=mon_year)
     except Exception as e:
