@@ -271,19 +271,20 @@ def get_user_report():
             # TC Report
             results = game.get_data(gid, pid, mon_year)
             if results != 0:
-                prev_tc = 0
-                for date, tc in results.dict2.items():
-                    if prev_tc is not None and prev_tc != tc:
-                        entry = {
-                            'gid': gid,
-                            'pid': pid,
-                            'mon_year': mon_year,
-                            'date': date,
-                            'prev_tc': prev_tc,
-                            'updated_tc': tc
-                        }
-                        table_data.append(entry)
-                        prev_tc = tc
+                prev_j = 0
+                if hasattr(results, 'dict2'):
+                    for date, j in results.dict2.items():
+                        if prev_j is not None and prev_j != j:
+                                entry = {
+                                    'gid': gid,
+                                    'pid': pid,
+                                    'date': date,
+                                    'mon_year':mon_year,
+                                    'prev_tc': prev_j,
+                                    'updated_tc': j
+                                }
+                                table_data.append(entry)
+                                prev_j = j
 
                 # Collection Report
                 if hasattr(results, 'dict3'):
@@ -338,6 +339,38 @@ def get_user_report():
 #         return ("OK")
 
 
+from collections import defaultdict
+
+@app.route('/flag2', methods=['GET'])
+def get_flag2():
+    try:
+        mon_year = request.args.get('mon_year')
+        all_ids = game.get_all_player_ids(name="players")
+        table_data = []
+
+        # Get data for all players at once
+        player_data = defaultdict(dict)
+        for i in all_ids:
+            gid, pid = game.get_pid_gid(i)
+            print(gid,pid)
+            results = game.get_data(gid, pid, mon_year)
+            if results != 0:
+                player_data[(gid, pid)] = results
+                print(player_data[(gid, pid)])
+        # Process player data
+        for (gid, pid), results in player_data.items():
+            balance = sum(results.dict.values())
+            var = results.dict2[list(results.dict2)[-1]]
+            if var <= balance:
+                if balance != 0 or var != 0:
+                    table_data.append({'gid': gid, 'pid': pid})
+
+        return render_template('flag.html', table_data=table_data, mon_year=mon_year)
+    except Exception as e:
+        logging.error(f'Error in get_flag function: {str(e)}')
+        return render_template('error.html', error_message=str(e))
+
+
 @app.route('/flag', methods=['GET'])
 def get_flag():
     try:
@@ -349,20 +382,19 @@ def get_flag():
             gid, pid = game.get_pid_gid(i)
             print(gid,pid)
             results = game.get_data(gid, pid, mon_year)
-            balance = sum(results.dict.values())
+            print(results)
             if results != 0:
+                balance = sum(results.dict.values())
                 var = results.dict2[list(results.dict2)[-1]]
-                print(var)
+                print("TC",var)
                 if var <= balance:
                     flag+=1
-                    entry = {
-                        'gid': gid,
-                        'pid': pid,
-                        'balance' : balance,
-                        'var' : var
-                    }
-                    table_data.append(entry)
-
+                    if balance !=0 or var !=0:
+                        entry = {
+                            'gid': gid,
+                            'pid': pid,
+                        }
+                        table_data.append(entry)
         return render_template('flag.html', table_data=table_data, mon_year=mon_year)
     except Exception as e:
         logging.error(f'Error in get_flag function: {str(e)}')

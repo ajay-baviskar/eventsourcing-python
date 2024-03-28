@@ -239,9 +239,7 @@ class MonthlyAccount(Aggregate):
         tc = round(tc,2)
         if (self.tc != tc): # If tc is changed, tirgger the CollectionUpdated 
             self.tc=tc
-        if self.tc < self.balance:
-            tc = self.balance
-        self.trigger_event(self.CollectionUpdated, gid=gid, pid=pid, mon_year=mon_year, dt=dt, collection=collection,tc=tc)
+            self.trigger_event(self.CollectionUpdated, gid=gid, pid=pid, mon_year=mon_year, dt=dt, collection=collection,tc=tc)
         # if tc is not changed, add collection as it is
         self.trigger_event(self.CollectionAdded, gid=gid, pid=pid, mon_year=mon_year, dt=dt, collection=collection,tc=tc)  
 
@@ -293,7 +291,8 @@ class MonthlyAccount(Aggregate):
             self.dict3 = {}
         # Append collection to existing list or initialize new list
         if self.dt in self.dict3:
-            self.dict3[self.dt].append(event.collection)
+            if self.dict3[self.dt][-1] != event.collection:
+                self.dict3[self.dt].append(event.collection)
         else:
             self.dict3[self.dt] = [event.collection]
             
