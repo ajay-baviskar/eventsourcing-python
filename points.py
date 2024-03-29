@@ -59,7 +59,7 @@ class Counters(ProcessApplication):
         #@Author : Suhani
         # Points calculation logic
         A = int(os.getenv('A'))
-        target = round(tc,2)
+        target = tc
         if target == 0:
             x = 0
         else:

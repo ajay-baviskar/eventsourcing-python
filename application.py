@@ -33,7 +33,8 @@ print(postgres_host)
 print(postgres_port)
 print(postgres_user)
 print(postgres_password)
-    
+
+   
 
 
 #LOCAL SQLITE DB
@@ -106,7 +107,7 @@ class Gamification(Application):
         group_user_registry1 = group_user_registry_data[0]
         for gid in group_user_registry1.keys():
             for pid,dist_id in group_user_registry1[gid].items():
-                group_user_registry.add_grp_user(gid= gid, pid= pid , dist_id=dist_id)  
+                group_user_registry.add_grp_user(gid= gid, pid= pid, dist_id=dist_id)  
                 self.register_player2(gid, pid)
         registry_id= GroupUserRegistry.create_id()
         try:

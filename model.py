@@ -230,13 +230,11 @@ class MonthlyAccount(Aggregate):
         if not hasattr(self, 'dict'):
             self.dict = {}
         self.dict[dt] = collection # Adds an entry to the dictionary self.dict with the key dt and value collection
-        self.balance = sum(self.dict.values())
         if dt not in self.dict3.keys():
             self.dict3[dt] = []  # Initialize list for each date if not present
         self.dict3[dt].append(collection)  
         #self.balance += collection # Holds the cumilative monthly collection 
-        print(self.balance)
-        tc = round(tc,2)
+        self.balance = sum(self.dict.values())
         if (self.tc != tc): # If tc is changed, tirgger the CollectionUpdated 
             self.tc=tc
             self.trigger_event(self.CollectionUpdated, gid=gid, pid=pid, mon_year=mon_year, dt=dt, collection=collection,tc=tc)
@@ -258,7 +256,6 @@ class MonthlyAccount(Aggregate):
     #@Author : Suhani
     def get_collection_dict(self):
         return self.dict  
-      
   
     @singledispatchmethod
     def apply(self, event: Event) -> None:
@@ -286,6 +283,9 @@ class MonthlyAccount(Aggregate):
             self.dict = {}
         self.dict[self.dt] = event.collection
         self.tc = event.tc
+        if not hasattr(self, 'dict2'):
+            self.dict2 = {}
+        self.dict2[self.dt] = event.tc
         # Initialize self.dict3 if not present
         if not hasattr(self, 'dict3'):
             self.dict3 = {}
