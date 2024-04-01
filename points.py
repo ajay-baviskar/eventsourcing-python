@@ -32,7 +32,6 @@ class Counters(ProcessApplication):
         pid = domain_event.pid
         mon_year = domain_event.mon_year
         dt = domain_event.dt
-        amount = domain_event.collection
         tc=domain_event.tc
         try:
             # Get Collection aggregate for the given month/year
@@ -60,38 +59,48 @@ class Counters(ProcessApplication):
         # Points calculation logic
         A = int(os.getenv('A'))
         target = tc
-        if target == 0:
-            x = 0
-        else:
-            x = round((float(amount)/target),10)
-        actual_points = round(((A**x - 1) / (A - 1)) * (int(os.getenv('MAX_PERFORMANCE')) * (target / int(os.getenv('BENCHMARK')))),9)
-
-        # Determine bonus points based on the day of the month
-        day = int(dt.split('-')[2])
-        bonus_points = 0
+        
+        points = 0
+        x = 0
+        actual_points = 0
         bpb1 = 0
         bpb2 = 0
-        if day == 10:
-            bpb1 = 2 * actual_points
-        elif day == 20:
-            bpb2 = actual_points
-        if 1 <= day <= 10:
-            bonus_points = 2 * actual_points
-        elif 11 <= day <= 20:
-            bonus_points =  actual_points + bpb1
-        elif 21 <= day <= 31: 
-            bonus_points = 0.1 * actual_points + bpb1 + bpb2 
-        points = round(actual_points + bonus_points,10)
-        
-        #@Author : Suhani
-        # Add points to the collection aggregate
-        # Check if dt exists in collection.dates
+        day10_points = 0
+        day20_points = 0
+
+        for i in collection_dict.keys():
+            if target == 0:
+                x = 0
+            else:
+                x += (float(collection_dict[i]) / target)
+            actual_points = ((A**x - 1) / (A - 1)) * (int(os.getenv('MAX_PERFORMANCE')) * (target / int(os.getenv('BENCHMARK'))))
+            # Determine bonus points based on the day of the month
+            day = int(i.split('-')[2])
+
+            bonus_points = 0
+            if day == 10:
+                bpb1 = 2 * actual_points
+                day10_points = actual_points
+            elif day == 20:
+                bpb2 = actual_points - day10_points
+                day20_points = actual_points
+            if 1 <= day <= 10:
+                bonus_points = 2 * actual_points
+            elif 11 <= day <= 20:
+                bonus_points =  actual_points - day10_points + bpb1
+            elif 21 <= day <= 31: 
+                bonus_points = (0.1 * (actual_points - day20_points)) + (bpb1 + bpb2) 
+
+            points = actual_points + bonus_points
+            print(points)
+        # Update points in the collection aggregate
         if dt not in collection.dates:
             # Call add_points with the correct parameter
             collection.add_points(dt, points,actual_points, bonus_points)
         else:
             print("Update")
 
+        # Save the updated collection to the repository
         process_event.collect_events(collection)
 
     #@Author : Suhani
@@ -138,8 +147,8 @@ class Counters(ProcessApplication):
             if target == 0:
                 x = 0
             else:
-                x += round((float(collection_dict[i]) / target), 10)
-            actual_points = round(((A**x - 1) / (A - 1)) * (int(os.getenv('MAX_PERFORMANCE')) * (target / int(os.getenv('BENCHMARK')))),9)
+                x += (float(collection_dict[i]) / target)
+            actual_points = ((A**x - 1) / (A - 1)) * (int(os.getenv('MAX_PERFORMANCE')) * (target / int(os.getenv('BENCHMARK'))))
             # Determine bonus points based on the day of the month
             day = int(i.split('-')[2])
 
@@ -158,6 +167,7 @@ class Counters(ProcessApplication):
                 bonus_points = (0.1 * (actual_points - day20_points)) + (bpb1 + bpb2) 
 
             points = actual_points + bonus_points
+            print("upoints",points)
         # Update points in the collection aggregate
         collection.update_points(dt, points,actual_points, bonus_points)
 
@@ -207,9 +217,9 @@ class Collection(Aggregate):
     @event('PointsAdded')
     def add_points(self, dt, points, actual_points, bonus_points):
         self.dates.append(dt)
-        self.points += points
-        self.actual_points += actual_points
-        self.bonus_points += bonus_points
+        self.points = points
+        self.actual_points = actual_points
+        self.bonus_points = bonus_points
 
     #@Author: Suhani
     # Event decorator to register PointsUpdated events

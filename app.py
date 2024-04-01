@@ -274,17 +274,17 @@ def get_user_report():
                 prev_j = 0
                 if hasattr(results, 'dict2'):
                     for date, j in results.dict2.items():
-                        if prev_j is not None and prev_j != j:
+                        if prev_j is not None and round(prev_j,2) != round(j,2):
+                            if j != 0 and prev_j != 0:
                                 entry = {
                                     'gid': gid,
                                     'pid': pid,
                                     'date': date,
-                                    'mon_year':mon_year,
-                                    'prev_tc': prev_j,
-                                    'updated_tc': j
+                                    'prev_tc': round(prev_j,2),
+                                    'updated_tc': round(j,2)
                                 }
                                 table_data.append(entry)
-                                prev_j = j
+                            prev_j = j
 
                 # Collection Report
                 if hasattr(results, 'dict3'):

@@ -235,11 +235,11 @@ class MonthlyAccount(Aggregate):
         self.dict3[dt].append(collection)  
         #self.balance += collection # Holds the cumilative monthly collection 
         self.balance = sum(self.dict.values())
-        if (self.tc != tc): # If tc is changed, tirgger the CollectionUpdated 
-            self.tc=tc
-            self.trigger_event(self.CollectionUpdated, gid=gid, pid=pid, mon_year=mon_year, dt=dt, collection=collection,tc=tc)
+        #if (self.tc != tc): # If tc is changed, tirgger the CollectionUpdated 
+        self.tc=tc
+        self.trigger_event(self.CollectionUpdated, gid=gid, pid=pid, mon_year=mon_year, dt=dt, collection=collection,tc=tc)
         # if tc is not changed, add collection as it is
-        self.trigger_event(self.CollectionAdded, gid=gid, pid=pid, mon_year=mon_year, dt=dt, collection=collection,tc=tc)  
+        #self.trigger_event(self.CollectionAdded, gid=gid, pid=pid, mon_year=mon_year, dt=dt, collection=collection,tc=tc)  
 
     #@Author : Suhani
     def update_collection(self, gid, pid,  mon_year, dt, new_collection, tc) -> None:
