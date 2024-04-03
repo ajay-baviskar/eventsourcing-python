@@ -148,42 +148,24 @@ def get_records_for_month(gid, pid, mon_year):
         logging.error(f'Error getting records for month-year {mon_year}: {str(e)}')
         return []
 
-
-
-
+# Takes mon-year as user input.
+# Ranks all the players according to points by accessing their payer ids then their collection points
 @app.route('/rank', methods=['GET'])
 def get_rank():
     try:
         dt = request.args.get('mon_year')
         rank_list = []
 
-        # Fetch flag data from the provided API
-        flag_api_url = f'http://194.163.171.206:30056/flag?mon_year={dt}'
-        flag_response = requests.get(flag_api_url)
-        flag_content = flag_response.text
-        
-        # Parse the table data assuming it's tab-separated
-        flag_data_lines = flag_content.strip().split('\n')
-        flag_dict = {}
-        for line in flag_data_lines[1:]:
-            cols = line.split('\t')
-            gid = cols[0]
-            pid = cols[1]
-            flag_dict[(gid, pid)] = 'F'
         # Iterate over the PlayerRegistry for gid and pid 
         all_ids = game.get_all_player_ids(name="players")
         for i in all_ids:
             gid, pid = game.get_pid_gid(i)
             points = counters.get_collection_points(gid=gid, pid=pid, mon_year=dt)
 
-            # Check if there is a flag for this GID and PID
-            flag = flag_dict.get((gid, pid), '')
-
             rank_dict = {
                 'GID': gid,
                 'PID': pid,
-                'Points': round(points, 2),
-                'Flag': flag
+                'Points': round(points,2)
             }
             rank_list.append(rank_dict)
 
@@ -197,41 +179,7 @@ def get_rank():
     except Exception as e:
         logging.error(f'Error in get_rank function: {str(e)}')
         # Handle the error gracefully, e.g., return an error page or message
-        return str(e)
-
-
-# Takes mon-year as user input.
-# Ranks all the players according to points by accessing their payer ids then their collection points
-# @app.route('/rank', methods=['GET'])
-# def get_rank():
-#     try:
-#         dt = request.args.get('mon_year')
-#         rank_list = []
-
-#         # Iterate over the PlayerRegistry for gid and pid 
-#         all_ids = game.get_all_player_ids(name="players")
-#         for i in all_ids:
-#             gid, pid = game.get_pid_gid(i)
-#             points = counters.get_collection_points(gid=gid, pid=pid, mon_year=dt)
-
-#             rank_dict = {
-#                 'GID': gid,
-#                 'PID': pid,
-#                 'Points': round(points,2)
-#             }
-#             rank_list.append(rank_dict)
-
-#         # Sort the list of dictionaries by the 'Points' key in descending order
-#         sorted_rank = sorted(rank_list, key=lambda x: x['Points'], reverse=True)
-
-#         for idx, player_info in enumerate(sorted_rank, start=1):
-#             player_info['Rank'] = idx
-
-#         return render_template('rank.html', rank_list=sorted_rank, mon_year=dt)
-#     except Exception as e:
-#         logging.error(f'Error in get_rank function: {str(e)}')
-#         # Handle the error gracefully, e.g., return an error page or message
-#         return render_template('error.html', error_message=str(e))
+        return render_template('error.html', error_message=str(e))
 
 
 # Takes mon-year and district id as user input
