@@ -4,7 +4,6 @@ from flask import Flask, request, jsonify, render_template, Response
 from model import GroupUserRegistry
 from application import Gamification
 from points import Counters
-from datetime import datetime
 import requests
 from eventsourcing.system import SingleThreadedRunner
 from eventsourcing.system import System
@@ -44,10 +43,20 @@ def fetch():
         logging.info('Fetching data...')
         game.add_groups_and_users() # To fetch gid, pid, distid from API and save in DB
         logging.info('Data fetched successfully!')
-        return jsonify({'message': 'Data Fetched!!!'})
+        response = {
+            "code": 200,
+            "success": True,
+            "message": "Data fetched successfully!"
+        }
+        return jsonify(response)
     except Exception as e:
         logging.error(f'Error fetching data: {str(e)}')
-        return jsonify({'error': 'An error occurred while fetching data.'}), 500
+        response = {
+            "code": 500,
+            "success": False,
+            "message": "Unsuccessful!"
+        }
+        return jsonify(response), 500
 
 
 # Route to add the collection in db
@@ -73,10 +82,20 @@ def add_collection():
                 game.add_collection(gid, pid, dt, collection, tc)
         
         logging.info('Collections added successfully for all users!')
-        return jsonify({'message': 'Collections for users added successfully!'})
+        response = {
+            "code": 200,
+            "success": True,
+            "message": "Collections for users added successfully!"
+        }
+        return jsonify(response)
     except Exception as e:
         logging.error(f'Error adding collections: {str(e)}')
-        return jsonify({'error': 'An error occurred while adding collections.'}), 500
+        response = {
+            "code": 500,
+            "success": False,
+            "message": "Unsuccessful!"
+        }
+        return jsonify(response), 500
 
 # Get the achieved collection and target collection for a whole month using external api 
 # Takes the group id and player id from the GroupUserRegistry
@@ -90,9 +109,11 @@ def get_records_for_month(gid, pid, mon_year):
         date_obj = datetime.strptime(mon_year, "%b-%y")
         month = date_obj.month
         year = date_obj.year
+        # Get yesterday's date
+        yesterday = datetime.now().date() - timedelta(days=1)
 
-        # Iterate over the days of the month
-        days_in_month = range(1, (datetime(year, month % 12 + 1, 1) - timedelta(days=1)).day + 1)
+        # Iterate over the days of the month until yesterday's date
+        days_in_month = range(1, min(yesterday.day, (datetime(year, month % 12 + 1, 1) - timedelta(days=1)).day) + 1)
         for day in days_in_month:
             dt = f"{year}-{month:02d}-{day:02d}"
             logging.info(f'Processing date: {dt}')
@@ -128,24 +149,41 @@ def get_records_for_month(gid, pid, mon_year):
         return []
 
 
-# Takes mon-year as user input.
-# Ranks all the players according to points by accessing their payer ids then their collection points
+
+
 @app.route('/rank', methods=['GET'])
 def get_rank():
     try:
         dt = request.args.get('mon_year')
         rank_list = []
 
+        # Fetch flag data from the provided API
+        flag_api_url = f'http://194.163.171.206:30056/flag?mon_year={dt}'
+        flag_response = requests.get(flag_api_url)
+        flag_content = flag_response.text
+        
+        # Parse the table data assuming it's tab-separated
+        flag_data_lines = flag_content.strip().split('\n')
+        flag_dict = {}
+        for line in flag_data_lines[1:]:
+            cols = line.split('\t')
+            gid = cols[0]
+            pid = cols[1]
+            flag_dict[(gid, pid)] = 'F'
         # Iterate over the PlayerRegistry for gid and pid 
         all_ids = game.get_all_player_ids(name="players")
         for i in all_ids:
             gid, pid = game.get_pid_gid(i)
             points = counters.get_collection_points(gid=gid, pid=pid, mon_year=dt)
 
+            # Check if there is a flag for this GID and PID
+            flag = flag_dict.get((gid, pid), '')
+
             rank_dict = {
                 'GID': gid,
                 'PID': pid,
-                'Points': round(points,2)
+                'Points': round(points, 2),
+                'Flag': flag
             }
             rank_list.append(rank_dict)
 
@@ -159,54 +197,41 @@ def get_rank():
     except Exception as e:
         logging.error(f'Error in get_rank function: {str(e)}')
         # Handle the error gracefully, e.g., return an error page or message
-        return render_template('error.html', error_message=str(e))
+        return str(e)
 
 
-    
-@app.route('/rank/download', methods=['GET'])
-def download_rank_csv():
-    try:
-        dt = request.args.get('mon_year')
-        rank_list = []
+# Takes mon-year as user input.
+# Ranks all the players according to points by accessing their payer ids then their collection points
+# @app.route('/rank', methods=['GET'])
+# def get_rank():
+#     try:
+#         dt = request.args.get('mon_year')
+#         rank_list = []
 
-        # Iterate over the PlayerRegistry for gid and pid 
-        all_ids = game.get_all_player_ids(name="players")
-        for i in all_ids:
-            gid, pid = game.get_pid_gid(i)
-            points = counters.get_collection_points(gid=gid, pid=pid, mon_year=dt)
+#         # Iterate over the PlayerRegistry for gid and pid 
+#         all_ids = game.get_all_player_ids(name="players")
+#         for i in all_ids:
+#             gid, pid = game.get_pid_gid(i)
+#             points = counters.get_collection_points(gid=gid, pid=pid, mon_year=dt)
 
-            rank_dict = {
-                'GID': gid,
-                'PID': pid,
-                'Points': points
-            }
-            rank_list.append(rank_dict)
+#             rank_dict = {
+#                 'GID': gid,
+#                 'PID': pid,
+#                 'Points': round(points,2)
+#             }
+#             rank_list.append(rank_dict)
 
-        # Sort the list of dictionaries by the 'Points' key in descending order
-        sorted_rank = sorted(rank_list, key=lambda x: x['Points'], reverse=True)
+#         # Sort the list of dictionaries by the 'Points' key in descending order
+#         sorted_rank = sorted(rank_list, key=lambda x: x['Points'], reverse=True)
 
-        # Prepare CSV data
-        csv_data = "GID,PID,Points\n"  # Header
-        for idx, player_info in enumerate(sorted_rank, start=1):
-            csv_data += f"{player_info['GID']},{player_info['PID']},{player_info['Points']}\n"
+#         for idx, player_info in enumerate(sorted_rank, start=1):
+#             player_info['Rank'] = idx
 
-        # Set up response headers
-        headers = {
-            "Content-Disposition": f"attachment; filename=rank_{dt}.csv",
-            "Content-Type": "text/csv"
-        }
-
-        # Return CSV file as a response
-        return Response(
-            csv_data,
-            mimetype="text/csv",
-            headers=headers
-        )
-    except Exception as e:
-        logging.error(f'Error in download_rank_csv function: {str(e)}')
-        # Handle the error gracefully, e.g., return an error page or message
-        return render_template('error.html', error_message=str(e))
-
+#         return render_template('rank.html', rank_list=sorted_rank, mon_year=dt)
+#     except Exception as e:
+#         logging.error(f'Error in get_rank function: {str(e)}')
+#         # Handle the error gracefully, e.g., return an error page or message
+#         return render_template('error.html', error_message=str(e))
 
 
 # Takes mon-year and district id as user input
