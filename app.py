@@ -1,55 +1,64 @@
+# app.py
 from flask import Flask, request, jsonify
-from referral_service import track_referral
-from database import get_db_connection
+from datetime import datetime
+from aggregates import User
+from repository import LeadRepository
+from events import LeadCreatedEvent
 
 app = Flask(__name__)
 
+# Database configuration
+db_config = {
+    'dbname': 'event_points_test',
+    'user': 'postgres',
+    'password': 'postgres',
+    'host': 'localhost',
+    'port': '5432'
+}
 
-@app.route("/share_link", methods=["GET"])
-def share_link():
-    referrer_id = request.args.get("referrer_id")
-    referral_link = f"https://google.com?referrer_id={referrer_id}"
-    return jsonify({"code": 200, "status": True, "Referral link": referral_link})
+repository = LeadRepository(db_config)
+users = {}
 
+@app.route('/create_lead', methods=['POST'])
+def create_lead():
+    user_id = request.json['user_id']
+    lead_id = request.json['lead_id']
 
-@app.route("/track_referral", methods=["GET"])
-def track_referral_endpoint():
-    referrer_id = request.args.get("referrer_id")
-    referred_user_id = request.args.get("referred_user_id")
-    message = track_referral(referrer_id, referred_user_id)
-    return jsonify({"code": 200, "status": True, "message": message})
+    if user_id not in users:
+        users[user_id] = User(user_id, repository)
 
+    user = users[user_id]
+    user.create_lead(lead_id)
 
-@app.route("/user_points", methods=["GET"])
-def user_points():
-    user_id = request.args.get("user_id")
-    connection = get_db_connection()
-    cursor = connection.cursor()
+    # Create and save the event
+    event = LeadCreatedEvent(user_id=user_id, lead_id=lead_id, created_at=datetime.now())
+    repository.save_event(event)
 
-    cursor.execute(
-        """
-        SELECT points FROM user_points WHERE user_id = %s;
-    """,
-        (user_id,),
-    )
-    user = cursor.fetchone()
+    return jsonify({"message": "Lead created", "user_id": user_id}), 201
 
-    cursor.close()
-    connection.close()
+@app.route('/points/<user_id>', methods=['GET'])
+def get_user_points(user_id):
+    with repository.conn.cursor() as cursor:
+        cursor.execute('SELECT points FROM user_points WHERE user_id = %s', (user_id,))
+        result = cursor.fetchone()
+        points = result[0] if result else 0
+    return jsonify({"user_id": user_id, "points": points}), 200
 
-    if user:
-        return (
-            jsonify(
-                {
-                    "code": 200,
-                    "status": True,
-                    "data": {"user_id": user_id, "points": user[0]},
-                }
-            ),
-            200,
-        )
-    return jsonify({"code": 404, "status": False, "message": "User not found."}), 404
+@app.route('/events/<user_id>', methods=['GET'])
+def get_user_events(user_id):
+    with repository.conn.cursor() as cursor:
+        cursor.execute('SELECT * FROM events_log WHERE user_id = %s', (user_id,))
+        events = cursor.fetchall()
+        events_list = [
+            {
+                "id": event[0],
+                "event_type": event[2],
+                "lead_id": event[3],
+                "points": event[4],
+                "created_at": event[5]
+            } for event in events
+        ]
+    return jsonify({"user_id": user_id, "events": events_list}), 200
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
