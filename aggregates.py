@@ -1,4 +1,3 @@
-# aggregates.py
 from events import LeadCreatedEvent
 
 class User:
@@ -9,18 +8,39 @@ class User:
         self.leads = []
 
     def create_lead(self, lead_id):
-        self.leads.append(lead_id)
+        # Increment lead count first
         self.lead_count += 1
-        self.check_points_awarded()
-        # Log the lead creation event
-        self.repository.log_event(self.user_id, 'LeadCreated', lead_id)
+        self.leads.append(lead_id)
 
-    def check_points_awarded(self):
-        if self.lead_count  % 5 == 0:
-            self.award_points(100)
+        # Generic event data for lead creation
+        event_data = {
+            "event_name": "LeadCreated",
+            "lead_id": lead_id,
+            "lead_count": self.lead_count,
+            "points": 0  # Points for lead creation
+        }
 
-    def award_points(self, points):
+        # Save the LeadCreated event
+        self.repository.save_event(self.user_id, event_data)
+
+        # Check if the lead count is exactly 5
+        if self.lead_count % 5 == 0:
+            # Award points
+            self.award_points(100, lead_id)  # Pass lead_id when awarding points
+
+    def award_points(self, points, lead_id):
+        # Update points and lead count in the database
         self.repository.update_points_and_lead_count(self.user_id, points, self.lead_count)
-        # Log the points awarded event
-        self.repository.log_event(self.user_id, 'PointsAwarded', points=points)
-        print(f"User {self.user_id} awarded {points} points and has created {self.lead_count} leads.")
+
+        # Generic event data for points awarded
+        points_event_data = {
+            "event_name": "PointsAwarded",
+            "lead_id": lead_id,  # Include lead_id here
+            "points": points,
+            "lead_count": self.lead_count
+        }
+        
+        # Save the PointsAwarded event
+        self.repository.save_event(self.user_id, points_event_data)
+
+        print(f"User {self.user_id} awarded {points} points after creating {self.lead_count} leads for lead {lead_id}.")
